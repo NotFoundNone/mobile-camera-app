@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">MobileCourceWork</string>
+    <string name="switch_camera">Switch Camera</string>
+    <string name="take_photo">Take Photo</string>
+    <string name="gallery">Open Gallery</string>
+</resources>
