@@ -54,6 +54,16 @@
             android:scaleType="centerInside"
             android:elevation="6dp" />
 
+        <ImageButton
+            android:id="@+id/button_record_video"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:background="@drawable/rounded_button_background"
+            android:padding="8dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/record_video"
+            android:elevation="6dp"/>
+
         <!-- Кнопка перехода в галерею -->
         <ImageButton
             android:id="@+id/button_gallery"

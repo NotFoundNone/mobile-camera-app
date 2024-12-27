@@ -1,5 +1,6 @@
 package com.example.mobilecourcework
 
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Environment
@@ -8,11 +9,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.Toast
-import androidx.camera.core.CameraSelector
-import androidx.camera.core.ImageCapture
-import androidx.camera.core.ImageCaptureException
-import androidx.camera.core.Preview
+import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.video.*
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -25,7 +24,10 @@ class PhotoFragment : Fragment() {
     private lateinit var cameraExecutor: ExecutorService
     private lateinit var previewView: PreviewView
     private lateinit var imageCapture: ImageCapture
-    private var cameraSelector: CameraSelector = CameraSelector.DEFAULT_BACK_CAMERA // Начальная камера
+    private lateinit var videoCapture: VideoCapture<Recorder>
+    private var currentRecording: Recording? = null
+    private var cameraSelector: CameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+    private var isRecording = false
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -36,6 +38,7 @@ class PhotoFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
         previewView = view.findViewById(R.id.previewView)
         cameraExecutor = Executors.newSingleThreadExecutor()
 
@@ -53,25 +56,35 @@ class PhotoFragment : Fragment() {
             findNavController().navigate(R.id.action_photoFragment_to_galleryFragment)
         }
 
-        // Обработчик кнопки переключения камеры
         view.findViewById<ImageButton>(R.id.button_switch_camera).setOnClickListener {
             switchCamera()
         }
+
+        setupRecordVideoButton(view)
     }
 
     private fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
         cameraProviderFuture.addListener({
             val cameraProvider = cameraProviderFuture.get()
+
             val preview = Preview.Builder().build().also {
                 it.setSurfaceProvider(previewView.surfaceProvider)
             }
+
             imageCapture = ImageCapture.Builder().build()
 
-            // Перезапуск камеры с текущим `cameraSelector`
+            val recorder = Recorder.Builder()
+                .setQualitySelector(QualitySelector.from(Quality.HIGHEST))
+                .build()
+
+            videoCapture = VideoCapture.withOutput(recorder)
+
             cameraProvider.unbindAll()
             try {
-                cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageCapture)
+                cameraProvider.bindToLifecycle(
+                    this, cameraSelector, preview, imageCapture, videoCapture
+                )
             } catch (exc: Exception) {
                 Toast.makeText(requireContext(), "Ошибка запуска камеры: ${exc.message}", Toast.LENGTH_SHORT).show()
             }
@@ -84,7 +97,6 @@ class PhotoFragment : Fragment() {
 
         val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
 
-        // Эффект вспышки перед сохранением снимка
         triggerFlashEffect()
 
         imageCapture.takePicture(
@@ -121,17 +133,78 @@ class PhotoFragment : Fragment() {
     }
 
     private fun switchCamera() {
-        // Переключение между основной и фронтальной камерой
         cameraSelector = if (cameraSelector == CameraSelector.DEFAULT_BACK_CAMERA) {
             CameraSelector.DEFAULT_FRONT_CAMERA
         } else {
             CameraSelector.DEFAULT_BACK_CAMERA
         }
-        startCamera() // Перезапуск камеры с новым выбором
+        startCamera()
+    }
+
+    private fun setupRecordVideoButton(view: View) {
+        val recordButton = view.findViewById<ImageButton>(R.id.button_record_video)
+        recordButton.setOnClickListener {
+            if (isRecording) {
+                stopRecording()
+                recordButton.setImageResource(R.drawable.record_video)
+            } else {
+                startRecording()
+//                recordButton.setImageResource(R.drawable.stop_recording)
+            }
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun startRecording() {
+        val mediaDir = requireContext().getExternalFilesDir(Environment.DIRECTORY_MOVIES)
+        val videoFile = File(mediaDir, "${System.currentTimeMillis()}.mp4")
+
+        val outputOptions = FileOutputOptions.Builder(videoFile).build()
+
+        currentRecording = videoCapture.output
+            .prepareRecording(requireContext(), outputOptions)
+            .apply {
+                if (allPermissionsGranted()) {
+                    withAudioEnabled()
+                }
+            }
+            .start(ContextCompat.getMainExecutor(requireContext())) { event ->
+                when (event) {
+                    is VideoRecordEvent.Start -> {
+                        isRecording = true
+                        Toast.makeText(requireContext(), "Запись началась", Toast.LENGTH_SHORT).show()
+                    }
+                    is VideoRecordEvent.Finalize -> {
+                        isRecording = false
+                        Toast.makeText(requireContext(), "Видео сохранено: ${videoFile.absolutePath}", Toast.LENGTH_LONG).show()
+                    }
+                }
+            }
+    }
+
+    private fun stopRecording() {
+        currentRecording?.stop()
+        currentRecording = null
+        isRecording = false
     }
 
     private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
         ContextCompat.checkSelfPermission(requireContext(), it) == PackageManager.PERMISSION_GRANTED
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQUEST_CODE_PERMISSIONS) {
+            if (allPermissionsGranted()) {
+                startCamera()
+            } else {
+                Toast.makeText(requireContext(), "Необходимо разрешение для работы", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     override fun onDestroy() {
@@ -141,7 +214,9 @@ class PhotoFragment : Fragment() {
 
     companion object {
         private const val REQUEST_CODE_PERMISSIONS = 1001
-        private val REQUIRED_PERMISSIONS = arrayOf(android.Manifest.permission.CAMERA)
+        private val REQUIRED_PERMISSIONS = arrayOf(
+            android.Manifest.permission.CAMERA,
+            android.Manifest.permission.RECORD_AUDIO
+        )
     }
 }
-
