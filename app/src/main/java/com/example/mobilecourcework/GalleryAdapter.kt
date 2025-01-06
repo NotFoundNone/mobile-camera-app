@@ -1,10 +1,12 @@
 package com.example.mobilecourcework
 
+import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.navigation.findNavController
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import java.io.File
@@ -49,7 +51,17 @@ class GalleryAdapter(private val mediaFiles: List<File>) :
         // Устанавливаем текст
         holder.mediaType.text = fileType
         holder.mediaDate.text = creationDate
+
+        // Обработка клика для перехода в полноэкранный просмотр
+        holder.itemView.setOnClickListener {
+            val bundle = Bundle().apply {
+                putString("file_path", file.absolutePath)
+            }
+            holder.itemView.findNavController()
+                .navigate(R.id.action_galleryFragment_to_fullScreenViewerFragment, bundle)
+        }
     }
 
     override fun getItemCount(): Int = mediaFiles.size
 }
+

@@ -18,5 +18,19 @@
         android:id="@+id/galleryFragment"
         android:name="com.example.mobilecourcework.GalleryFragment"
         android:label="GalleryFragment"
-        tools:layout="@layout/fragment_gallery" />
+        tools:layout="@layout/fragment_gallery">
+        <action
+        android:id="@+id/action_galleryFragment_to_fullScreenViewerFragment"
+        app:destination="@id/fullScreenViewerFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/fullScreenViewerFragment"
+        android:name="com.example.mobilecourcework.FullScreenViewerFragment"
+        android:label="Полноэкранный просмотр"
+        tools:layout="@layout/fragment_full_screen_viewer">
+        <action
+            android:id="@+id/action_fullScreenViewerFragment_to_photoFragment"
+            app:destination="@id/photoFragment" />
+    </fragment>
 </navigation>
