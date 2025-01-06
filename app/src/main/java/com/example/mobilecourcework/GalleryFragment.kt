@@ -34,7 +34,7 @@ class GalleryFragment : Fragment() {
         // Получаем ту же папку, в которую камера сохраняет фотографии
         val mediaDir = requireContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES)
         return mediaDir?.listFiles()?.filter {
-            it.isFile && it.extension in listOf("jpg", "png")
+            it.isFile && it.extension in listOf("jpg", "png", "mp4")
         } ?: emptyList()
     }
 }

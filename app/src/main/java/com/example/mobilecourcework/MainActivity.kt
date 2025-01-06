@@ -13,7 +13,5 @@ class MainActivity : AppCompatActivity() {
         // Инициализация View Binding
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        // `NavHostFragment` автоматически загрузит `PhotoFragment` как стартовый
     }
 }

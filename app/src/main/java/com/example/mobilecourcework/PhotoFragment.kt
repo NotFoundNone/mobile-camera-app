@@ -16,6 +16,8 @@ import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
+import com.arthenica.mobileffmpeg.Config
+import com.arthenica.mobileffmpeg.FFmpeg
 import java.io.File
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -28,6 +30,7 @@ class PhotoFragment : Fragment() {
     private var currentRecording: Recording? = null
     private var cameraSelector: CameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
     private var isRecording = false
+    private val temporaryVideos = mutableListOf<File>() // Список временных видеофайлов
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -133,13 +136,118 @@ class PhotoFragment : Fragment() {
     }
 
     private fun switchCamera() {
+        if (isRecording) {
+            stopRecordingForSwitch() // Останавливаем запись
+            toggleCameraSelector()  // Переключаем камеру
+            startCamera()           // Перезапускаем камеру
+            startRecordingAfterSwitch() // Перезапускаем запись
+        } else {
+            toggleCameraSelector() // Просто переключаем камеру
+            startCamera()
+        }
+    }
+
+    private fun toggleCameraSelector() {
         cameraSelector = if (cameraSelector == CameraSelector.DEFAULT_BACK_CAMERA) {
             CameraSelector.DEFAULT_FRONT_CAMERA
         } else {
             CameraSelector.DEFAULT_BACK_CAMERA
         }
-        startCamera()
     }
+
+    private fun stopRecordingForSwitch() {
+        if (isRecording && currentRecording != null) {
+            currentRecording?.stop()
+            currentRecording = null
+            isRecording = false
+        } else {
+            Toast.makeText(requireContext(), "Попытка остановить неактивную запись", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+
+    @SuppressLint("MissingPermission")
+    private fun startRecordingAfterSwitch() {
+        val mediaDir = requireContext().getExternalFilesDir(Environment.DIRECTORY_MOVIES)
+        val videoFile = File(mediaDir, "${System.currentTimeMillis()}.mp4")
+
+        if (!videoFile.exists()) {
+            videoFile.createNewFile()
+        }
+
+        val outputOptions = FileOutputOptions.Builder(videoFile).build()
+
+        currentRecording = videoCapture.output
+            .prepareRecording(requireContext(), outputOptions)
+            .apply {
+                if (allPermissionsGranted()) {
+                    withAudioEnabled()
+                }
+            }
+            .start(ContextCompat.getMainExecutor(requireContext())) { event ->
+                when (event) {
+                    is VideoRecordEvent.Start -> {
+                        isRecording = true
+                        temporaryVideos.add(videoFile) // Добавляем файл только после успешного старта записи
+                        Toast.makeText(requireContext(), "Запись началась", Toast.LENGTH_SHORT).show()
+                    }
+                    is VideoRecordEvent.Finalize -> {
+                        isRecording = false
+                        Toast.makeText(requireContext(), "Видео сохранено временно: ${videoFile.absolutePath}", Toast.LENGTH_LONG).show()
+                    }
+                }
+            }
+    }
+
+    private fun preprocessVideosBeforeMerge() {
+        val processedVideos = mutableListOf<File>()
+
+        temporaryVideos.forEach { video ->
+            val processedFile = File(video.parent, "processed_${video.name}")
+            val command = "-i ${video.absolutePath} -c:v mpeg4 -c:a aac -strict experimental ${processedFile.absolutePath}"
+
+            val result = FFmpeg.execute(command)
+            if (result == Config.RETURN_CODE_SUCCESS) {
+                processedVideos.add(processedFile)
+            } else {
+                Toast.makeText(requireContext(), "Ошибка обработки видео: ${video.absolutePath}", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        temporaryVideos.clear()
+        temporaryVideos.addAll(processedVideos)
+    }
+
+    private fun mergeVideos() {
+        if (temporaryVideos.size <= 1) return // Нечего объединять
+
+        val mediaDir = requireContext().getExternalFilesDir(Environment.DIRECTORY_MOVIES)
+        val outputFile = File(mediaDir, "merged_${System.currentTimeMillis()}.mp4")
+
+        val listFile = File(mediaDir, "video_list.txt")
+        listFile.printWriter().use { out ->
+            temporaryVideos.filter { it.exists() }.forEach { video ->
+                out.println("file '${video.absolutePath}'")
+            }
+        }
+
+        if (!listFile.exists() || listFile.readText().isEmpty()) {
+            Toast.makeText(requireContext(), "Список файлов для объединения пуст", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val command = "-f concat -safe 0 -i ${listFile.absolutePath} -c copy ${outputFile.absolutePath}"
+
+        val result = FFmpeg.execute(command)
+        if (result == Config.RETURN_CODE_SUCCESS) {
+            Toast.makeText(requireContext(), "Видео объединено: ${outputFile.absolutePath}", Toast.LENGTH_LONG).show()
+            temporaryVideos.forEach { it.delete() }
+            temporaryVideos.clear()
+        } else {
+            Toast.makeText(requireContext(), "Ошибка объединения видео", Toast.LENGTH_SHORT).show()
+        }
+    }
+
 
     private fun setupRecordVideoButton(view: View) {
         val recordButton = view.findViewById<ImageButton>(R.id.button_record_video)
@@ -149,7 +257,7 @@ class PhotoFragment : Fragment() {
                 recordButton.setImageResource(R.drawable.record_video)
             } else {
                 startRecording()
-//                recordButton.setImageResource(R.drawable.stop_recording)
+                recordButton.setImageResource(R.drawable.stop_recording)
             }
         }
     }
@@ -158,6 +266,7 @@ class PhotoFragment : Fragment() {
     private fun startRecording() {
         val mediaDir = requireContext().getExternalFilesDir(Environment.DIRECTORY_MOVIES)
         val videoFile = File(mediaDir, "${System.currentTimeMillis()}.mp4")
+        temporaryVideos.add(videoFile)
 
         val outputOptions = FileOutputOptions.Builder(videoFile).build()
 
@@ -177,6 +286,8 @@ class PhotoFragment : Fragment() {
                     is VideoRecordEvent.Finalize -> {
                         isRecording = false
                         Toast.makeText(requireContext(), "Видео сохранено: ${videoFile.absolutePath}", Toast.LENGTH_LONG).show()
+                        preprocessVideosBeforeMerge()
+                        mergeVideos()
                     }
                 }
             }
