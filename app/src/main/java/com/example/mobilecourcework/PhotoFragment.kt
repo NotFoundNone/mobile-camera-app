@@ -44,13 +44,19 @@ class PhotoFragment : Fragment() {
         cameraExecutor = Executors.newSingleThreadExecutor()
 
         val toggleGroup = view.findViewById<MaterialButtonToggleGroup>(R.id.toggleGroup)
+        val buttonPhoto = view.findViewById<MaterialButton>(R.id.button_photo)
+        val buttonVideo = view.findViewById<MaterialButton>(R.id.button_video)
 
-        // Определяем текущий режим
+        // Устанавливаем начальное состояние
         val currentFragmentId = findNavController().currentDestination?.id
         if (currentFragmentId == R.id.photoFragment) {
             toggleGroup.check(R.id.button_photo)
+            buttonPhoto.setTextColor(ContextCompat.getColor(requireContext(), R.color.orange))
+            buttonVideo.setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
         } else if (currentFragmentId == R.id.videoFragment) {
             toggleGroup.check(R.id.button_video)
+            buttonVideo.setTextColor(ContextCompat.getColor(requireContext(), R.color.orange))
+            buttonPhoto.setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
         }
 
         // Обработчик переключения режимов
@@ -58,11 +64,15 @@ class PhotoFragment : Fragment() {
             if (isChecked) {
                 when (checkedId) {
                     R.id.button_photo -> {
+                        buttonPhoto.setTextColor(ContextCompat.getColor(requireContext(), R.color.orange))
+                        buttonVideo.setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
                         if (currentFragmentId != R.id.photoFragment) {
                             findNavController().navigate(R.id.action_videoFragment_to_photoFragment)
                         }
                     }
                     R.id.button_video -> {
+                        buttonVideo.setTextColor(ContextCompat.getColor(requireContext(), R.color.orange))
+                        buttonPhoto.setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
                         if (currentFragmentId != R.id.videoFragment) {
                             findNavController().navigate(R.id.action_photoFragment_to_videoFragment)
                         }

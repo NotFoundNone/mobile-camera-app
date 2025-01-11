@@ -1,18 +1,17 @@
 package com.example.mobilecourcework
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.text.format.DateFormat
 import android.view.View
-import android.widget.ImageButton
-import android.widget.ImageView
-import android.widget.VideoView
+import android.widget.*
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
 import java.io.File
-
-import android.os.Handler
-import android.os.Looper
-import android.widget.SeekBar
+import java.text.SimpleDateFormat
+import java.util.*
 
 class FullScreenViewerFragment : Fragment(R.layout.fragment_full_screen_viewer) {
 
@@ -22,6 +21,7 @@ class FullScreenViewerFragment : Fragment(R.layout.fragment_full_screen_viewer) 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Получение файла из аргументов
         file = File(requireArguments().getString("file_path")!!)
         val imageView = view.findViewById<ImageView>(R.id.full_screen_image)
         val videoView = view.findViewById<VideoView>(R.id.full_screen_video)
@@ -38,7 +38,7 @@ class FullScreenViewerFragment : Fragment(R.layout.fragment_full_screen_viewer) 
             videoView.setVideoPath(file.absolutePath)
 
             videoView.setOnPreparedListener { mediaPlayer ->
-                mediaPlayer.isLooping = false // Зацикливание по желанию
+                mediaPlayer.isLooping = false
                 seekBar.max = videoView.duration
 
                 playPauseButton.setOnClickListener {
@@ -58,7 +58,7 @@ class FullScreenViewerFragment : Fragment(R.layout.fragment_full_screen_viewer) 
                         if (videoView.isPlaying) {
                             seekBar.progress = videoView.currentPosition
                         }
-                        handler.postDelayed(this, 500) // Обновление каждые 500 мс
+                        handler.postDelayed(this, 500)
                     }
                 })
 
@@ -105,8 +105,14 @@ class FullScreenViewerFragment : Fragment(R.layout.fragment_full_screen_viewer) 
     private fun deleteFile() {
         if (file.exists()) {
             file.delete()
-            findNavController().popBackStack() // Возврат к галерее
+            findNavController().popBackStack()
         }
+    }
+
+    private fun getFileCreationDate(file: File): String {
+        val lastModified = file.lastModified()
+        val dateFormat = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
+        return dateFormat.format(Date(lastModified))
     }
 
     override fun onDestroyView() {
@@ -116,5 +122,3 @@ class FullScreenViewerFragment : Fragment(R.layout.fragment_full_screen_viewer) 
         }
     }
 }
-
-

@@ -2,14 +2,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- VideoView для воспроизведения видео -->
+    <!-- Видео -->
     <VideoView
         android:id="@+id/full_screen_video"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="gone" />
 
-    <!-- ImageView для отображения изображений -->
+    <!-- Изображение -->
     <ImageView
         android:id="@+id/full_screen_image"
         android:layout_width="match_parent"
@@ -17,7 +17,7 @@
         android:scaleType="fitCenter"
         android:visibility="gone" />
 
-    <!-- Ползунок для управления видео -->
+    <!-- Ползунок -->
     <SeekBar
         android:id="@+id/video_seek_bar"
         android:layout_width="match_parent"
@@ -26,7 +26,7 @@
         android:layout_marginBottom="60dp"
         android:visibility="gone" />
 
-    <!-- Кнопка управления видео -->
+    <!-- Кнопка воспроизведения/паузы -->
     <ImageButton
         android:id="@+id/play_pause_button"
         android:layout_width="48dp"
@@ -35,6 +35,21 @@
         android:layout_marginBottom="16dp"
         android:background="@null"
         android:src="@android:drawable/ic_media_play"
+        android:visibility="gone" />
+
+    <!-- Название файла снизу -->
+    <TextView
+        android:id="@+id/file_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_margin="16dp"
+        android:padding="8dp"
+        android:background="#AA000000"
+        android:textColor="#FFFFFF"
+        android:textSize="16sp"
+        android:ellipsize="end"
+        android:singleLine="true"
         android:visibility="gone" />
 
     <!-- Кнопка удаления -->
