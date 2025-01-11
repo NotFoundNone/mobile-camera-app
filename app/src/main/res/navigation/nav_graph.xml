@@ -12,6 +12,22 @@
         <action
             android:id="@+id/action_photoFragment_to_galleryFragment"
             app:destination="@id/galleryFragment" />
+        <action
+            android:id="@+id/action_photoFragment_to_videoFragment"
+            app:destination="@id/videoFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/videoFragment"
+        android:name="com.example.mobilecourcework.VideoFragment"
+        android:label="Видео"
+        tools:layout="@layout/fragment_video">
+        <action
+            android:id="@+id/action_videoFragment_to_galleryFragment"
+            app:destination="@id/galleryFragment" />
+        <action
+            android:id="@+id/action_videoFragment_to_photoFragment"
+            app:destination="@id/photoFragment" />
     </fragment>
 
     <fragment

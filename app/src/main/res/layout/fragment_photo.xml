@@ -14,67 +14,107 @@
         app:implementationMode="performance"
         app:scaleType="fitCenter" />
 
+    <com.google.android.material.button.MaterialButtonToggleGroup
+        android:id="@+id/toggleGroup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        app:singleSelection="true"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- Фото кнопка -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_photo"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Photo"
+            app:icon="@drawable/baseline_photo_camera_24"
+            app:iconTint="@color/black" />
+
+        <!-- Видео кнопка -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_video"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Video"
+            app:icon="@drawable/record_video"
+            app:iconTint="@color/black" />
+    </com.google.android.material.button.MaterialButtonToggleGroup>
     <!-- Панель управления -->
-    <LinearLayout
+    <com.google.android.material.card.MaterialCardView
         android:id="@+id/controlPanel"
         android:layout_width="match_parent"
         android:layout_height="100dp"
-        android:orientation="horizontal"
-        android:gravity="center"
-        android:padding="16dp"
-        android:background="@color/black"
-        android:alpha="0.8"
+        android:layout_margin="8dp"
+        app:cardBackgroundColor="@color/black"
+        app:cardElevation="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:elevation="8dp">
+        android:alpha="1">
 
-        <!-- Кнопка переключения камеры -->
-        <ImageButton
-            android:id="@+id/button_switch_camera"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:background="@drawable/rounded_button_background"
-            android:padding="8dp"
-            android:scaleType="centerInside"
-            android:src="@drawable/switch_camera"
-            android:contentDescription="@string/switch_camera"
-            android:elevation="4dp" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:padding="16dp">
 
-        <!-- Кнопка создания фотографии -->
-        <ImageButton
-            android:id="@+id/button_take_photo"
-            android:layout_width="72dp"
-            android:layout_height="72dp"
-            android:layout_marginStart="32dp"
-            android:layout_marginEnd="32dp"
-            android:background="@drawable/rounded_button_background"
-            android:src="@drawable/take_photo"
-            android:contentDescription="@string/take_photo"
-            android:scaleType="centerInside"
-            android:elevation="6dp" />
+            <!-- Кнопка переключения камеры -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_switch_camera"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                app:cornerRadius="28dp"
+                android:backgroundTint="@color/white"
+                app:icon="@drawable/switch_camera"
+                app:iconSize="24dp"
+                app:iconGravity="top"
+                android:contentDescription="@string/switch_camera" />
 
-        <ImageButton
-            android:id="@+id/button_record_video"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:background="@drawable/rounded_button_background"
-            android:padding="8dp"
-            android:scaleType="centerInside"
-            android:src="@drawable/record_video"
-            android:elevation="6dp"/>
+            <!-- Кнопка создания фотографии -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_action"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:layout_marginStart="32dp"
+                android:layout_marginEnd="32dp"
+                app:cornerRadius="45dp"
+                android:backgroundTint="@color/white"
+                app:icon="@drawable/baseline_photo_camera_24"
+                app:iconSize="40dp"
+                app:iconTint="@color/black"
+                android:contentDescription="@string/take_photo" />
 
-        <!-- Кнопка перехода в галерею -->
-        <ImageButton
-            android:id="@+id/button_gallery"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:background="@drawable/rounded_button_background"
-            android:contentDescription="@string/gallery"
-            android:elevation="4dp"
-            android:padding="8dp"
-            android:scaleType="centerInside"
-            android:src="@drawable/gallery" />
+            <!-- Кнопка записи видео -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_record_video"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                app:cornerRadius="28dp"
+                android:backgroundTint="@color/white"
+                app:icon="@drawable/record_video"
+                app:iconSize="24dp"
+                app:iconGravity="top"
+                android:contentDescription="record" />
 
-    </LinearLayout>
+            <!-- Кнопка перехода в галерею -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_gallery"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                app:cornerRadius="28dp"
+                android:backgroundTint="@color/white"
+                app:icon="@drawable/gallery"
+                app:iconSize="24dp"
+                app:iconGravity="top"
+                android:contentDescription="@string/gallery" />
+
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
 </androidx.constraintlayout.widget.ConstraintLayout>
