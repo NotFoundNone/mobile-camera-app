@@ -2,6 +2,7 @@ package com.example.mobilecourcework
 
 import android.os.Bundle
 import android.os.Environment
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -31,10 +32,25 @@ class GalleryFragment : Fragment() {
     }
 
     private fun getImageFiles(): List<File> {
-        // Получаем ту же папку, в которую камера сохраняет фотографии
-        val mediaDir = requireContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-        return mediaDir?.listFiles()?.filter {
-            it.isFile && it.extension in listOf("jpg", "png", "mp4")
+        val pictureDir = requireContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+        val videoDir = requireContext().getExternalFilesDir(Environment.DIRECTORY_MOVIES)
+
+        val pictureFiles = pictureDir?.listFiles()?.filter {
+            it.isFile && it.extension.lowercase() in listOf("jpg", "png")
         } ?: emptyList()
+
+        val videoFiles = videoDir?.listFiles()?.filter {
+            it.isFile && it.extension.lowercase() == "mp4"
+        } ?: emptyList()
+
+        val allFiles = pictureFiles + videoFiles
+
+        allFiles.forEach {
+            Log.d("GalleryFragment", "Found file: ${it.name} | Path: ${it.absolutePath}")
+        }
+
+        return allFiles
     }
+
+
 }

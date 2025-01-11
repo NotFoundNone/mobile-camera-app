@@ -33,10 +33,20 @@ class GalleryAdapter(private val mediaFiles: List<File>) :
         val file = mediaFiles[position]
 
         // Загрузка изображения или превью видео
-        Glide.with(holder.itemView.context)
-            .load(file)
-            .placeholder(android.R.drawable.ic_menu_gallery)
-            .into(holder.imageView)
+        if (file.extension.lowercase() == "mp4") {
+            // Загрузка миниатюры видео
+            Glide.with(holder.itemView.context)
+                .asBitmap()
+                .load(file)
+                .placeholder(android.R.drawable.ic_menu_gallery)
+                .into(holder.imageView)
+        } else {
+            // Загрузка изображения
+            Glide.with(holder.itemView.context)
+                .load(file)
+                .placeholder(android.R.drawable.ic_menu_gallery)
+                .into(holder.imageView)
+        }
 
         // Определяем тип файла
         val fileType = when (file.extension.lowercase()) {

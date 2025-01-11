@@ -74,7 +74,8 @@ dependencies {
     implementation("com.github.bumptech.glide:glide:4.15.1")
     kapt("com.github.bumptech.glide:compiler:4.15.1")
 
-    implementation ("com.arthenica:mobile-ffmpeg-full:4.4.LTS")
+    implementation ("com.arthenica:mobile-ffmpeg-full:4.4")
 
+    implementation ("com.google.android.material:material:1.12.0")
 
 }
