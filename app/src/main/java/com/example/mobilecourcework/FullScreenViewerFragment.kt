@@ -3,50 +3,76 @@ package com.example.mobilecourcework
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.text.format.DateFormat
+import android.view.LayoutInflater
 import android.view.View
-import android.widget.*
+import android.view.ViewGroup
+import android.widget.SeekBar
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.bumptech.glide.Glide
+import com.example.mobilecourcework.databinding.FragmentFullScreenViewerBinding
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
-class FullScreenViewerFragment : Fragment(R.layout.fragment_full_screen_viewer) {
+class FullScreenViewerFragment : Fragment() {
+
+    private var _binding: FragmentFullScreenViewerBinding? = null
+    private val binding get() = _binding!!
 
     private lateinit var file: File
     private lateinit var handler: Handler
+
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
+    ): View {
+        _binding = FragmentFullScreenViewerBinding.inflate(inflater, container, false)
+        return binding.root
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         // Получение файла из аргументов
         file = File(requireArguments().getString("file_path")!!)
-        val imageView = view.findViewById<ImageView>(R.id.full_screen_image)
-        val videoView = view.findViewById<VideoView>(R.id.full_screen_video)
-        val playPauseButton = view.findViewById<ImageButton>(R.id.play_pause_button)
-        val seekBar = view.findViewById<SeekBar>(R.id.video_seek_bar)
 
         if (file.extension.lowercase() == "mp4") {
-            // Настройка для видео
-            videoView.visibility = View.VISIBLE
-            imageView.visibility = View.GONE
+            setupVideoViewer()
+        } else {
+            setupImageViewer()
+        }
+
+        // Кнопка удаления
+        binding.deleteButton.setOnClickListener {
+            deleteFile()
+        }
+
+        // Кнопка перехода к созданию нового контента
+        binding.createNewButton.setOnClickListener {
+            findNavController().navigate(R.id.action_fullScreenViewerFragment_to_photoFragment)
+        }
+    }
+
+    private fun setupVideoViewer() {
+        // Настройка для видео
+        with(binding) {
+            fullScreenVideo.visibility = View.VISIBLE
+            fullScreenImage.visibility = View.GONE
             playPauseButton.visibility = View.VISIBLE
-            seekBar.visibility = View.VISIBLE
+            videoSeekBar.visibility = View.VISIBLE
 
-            videoView.setVideoPath(file.absolutePath)
+            fullScreenVideo.setVideoPath(file.absolutePath)
 
-            videoView.setOnPreparedListener { mediaPlayer ->
+            fullScreenVideo.setOnPreparedListener { mediaPlayer ->
                 mediaPlayer.isLooping = false
-                seekBar.max = videoView.duration
+                videoSeekBar.max = fullScreenVideo.duration
 
                 playPauseButton.setOnClickListener {
-                    if (videoView.isPlaying) {
-                        videoView.pause()
+                    if (fullScreenVideo.isPlaying) {
+                        fullScreenVideo.pause()
                         playPauseButton.setImageResource(android.R.drawable.ic_media_play)
                     } else {
-                        videoView.start()
+                        fullScreenVideo.start()
                         playPauseButton.setImageResource(android.R.drawable.ic_media_pause)
                     }
                 }
@@ -55,18 +81,18 @@ class FullScreenViewerFragment : Fragment(R.layout.fragment_full_screen_viewer) 
                 handler = Handler(Looper.getMainLooper())
                 handler.post(object : Runnable {
                     override fun run() {
-                        if (videoView.isPlaying) {
-                            seekBar.progress = videoView.currentPosition
+                        if (fullScreenVideo.isPlaying) {
+                            videoSeekBar.progress = fullScreenVideo.currentPosition
                         }
                         handler.postDelayed(this, 500)
                     }
                 })
 
                 // Обработка перемещения ползунка
-                seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                videoSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                     override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                         if (fromUser) {
-                            videoView.seekTo(progress)
+                            fullScreenVideo.seekTo(progress)
                         }
                     }
 
@@ -75,30 +101,24 @@ class FullScreenViewerFragment : Fragment(R.layout.fragment_full_screen_viewer) 
                 })
             }
 
-            videoView.setOnCompletionListener {
+            fullScreenVideo.setOnCompletionListener {
                 playPauseButton.setImageResource(android.R.drawable.ic_media_play)
-                seekBar.progress = 0
+                videoSeekBar.progress = 0
             }
-        } else {
-            // Настройка для изображений
-            videoView.visibility = View.GONE
+        }
+    }
+
+    private fun setupImageViewer() {
+        // Настройка для изображений
+        with(binding) {
+            fullScreenVideo.visibility = View.GONE
             playPauseButton.visibility = View.GONE
-            seekBar.visibility = View.GONE
-            imageView.visibility = View.VISIBLE
+            videoSeekBar.visibility = View.GONE
+            fullScreenImage.visibility = View.VISIBLE
 
             Glide.with(requireContext())
                 .load(file)
-                .into(imageView)
-        }
-
-        // Кнопка удаления
-        view.findViewById<ImageButton>(R.id.delete_button).setOnClickListener {
-            deleteFile()
-        }
-
-        // Кнопка перехода к созданию нового контента
-        view.findViewById<ImageButton>(R.id.create_new_button).setOnClickListener {
-            findNavController().navigate(R.id.action_fullScreenViewerFragment_to_photoFragment)
+                .into(fullScreenImage)
         }
     }
 
@@ -109,14 +129,9 @@ class FullScreenViewerFragment : Fragment(R.layout.fragment_full_screen_viewer) 
         }
     }
 
-    private fun getFileCreationDate(file: File): String {
-        val lastModified = file.lastModified()
-        val dateFormat = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
-        return dateFormat.format(Date(lastModified))
-    }
-
     override fun onDestroyView() {
         super.onDestroyView()
+        _binding = null
         if (::handler.isInitialized) {
             handler.removeCallbacksAndMessages(null)
         }

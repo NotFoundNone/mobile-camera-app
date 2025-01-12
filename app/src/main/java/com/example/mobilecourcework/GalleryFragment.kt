@@ -1,7 +1,9 @@
 package com.example.mobilecourcework
 
+import android.content.ContentResolver
+import android.database.Cursor
 import android.os.Bundle
-import android.os.Environment
+import android.provider.MediaStore
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -11,7 +13,6 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.button.MaterialButton
 import java.io.File
 
 class GalleryFragment : Fragment() {
@@ -39,25 +40,59 @@ class GalleryFragment : Fragment() {
     }
 
     private fun getImageFiles(): List<File> {
-        val pictureDir = requireContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-        val videoDir = requireContext().getExternalFilesDir(Environment.DIRECTORY_MOVIES)
+        val imageFiles = mutableListOf<File>()
+        val contentResolver: ContentResolver = requireContext().contentResolver
 
-        val pictureFiles = pictureDir?.listFiles()?.filter {
-            it.isFile && it.extension.lowercase() in listOf("jpg", "png")
-        } ?: emptyList()
+        // Указание типов файлов: изображения
+        val imageProjection = arrayOf(
+            MediaStore.Images.Media.DATA,
+            MediaStore.Images.Media.DISPLAY_NAME
+        )
 
-        val videoFiles = videoDir?.listFiles()?.filter {
-            it.isFile && it.extension.lowercase() == "mp4"
-        } ?: emptyList()
+        // Запрос изображений из MediaStore
+        val imageCursor: Cursor? = contentResolver.query(
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+            imageProjection,
+            null,
+            null,
+            "${MediaStore.Images.Media.DATE_ADDED} DESC" // Последние добавленные изображения
+        )
 
-        val allFiles = pictureFiles + videoFiles
+        imageCursor?.use { cursor ->
+            val dataColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
+            while (cursor.moveToNext()) {
+                val imagePath = cursor.getString(dataColumn)
+                imageFiles.add(File(imagePath))
+            }
+        }
 
-        allFiles.forEach {
+        // Указание типов файлов: видео
+        val videoProjection = arrayOf(
+            MediaStore.Video.Media.DATA,
+            MediaStore.Video.Media.DISPLAY_NAME
+        )
+
+        // Запрос видео из MediaStore
+        val videoCursor: Cursor? = contentResolver.query(
+            MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+            videoProjection,
+            null,
+            null,
+            "${MediaStore.Video.Media.DATE_ADDED} DESC" // Последние добавленные видео
+        )
+
+        videoCursor?.use { cursor ->
+            val dataColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATA)
+            while (cursor.moveToNext()) {
+                val videoPath = cursor.getString(dataColumn)
+                imageFiles.add(File(videoPath))
+            }
+        }
+
+        imageFiles.forEach {
             Log.d("GalleryFragment", "Found file: ${it.name} | Path: ${it.absolutePath}")
         }
 
-        return allFiles
+        return imageFiles
     }
-
-
 }
