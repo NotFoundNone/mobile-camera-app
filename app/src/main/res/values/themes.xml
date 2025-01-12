@@ -6,4 +6,8 @@
     </style>
 
     <style name="Theme.MobileCourceWork" parent="Base.Theme.MobileCourceWork" />
+    <style name="Base.MaterialButton" parent="Widget.MaterialComponents.Button">
+        <item name="android:minHeight">0dp</item>
+        <item name="android:minWidth">0dp</item>
+    </style>
 </resources>

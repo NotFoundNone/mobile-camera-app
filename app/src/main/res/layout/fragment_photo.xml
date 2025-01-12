@@ -75,8 +75,8 @@
             <!-- Кнопка переключения камеры -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/button_switch_camera"
-                android:layout_width="56dp"
-                android:layout_height="56dp"
+                android:layout_width="57dp"
+                android:layout_height="62dp"
                 app:cornerRadius="28dp"
                 android:paddingLeft="7dp"
                 android:backgroundTint="@color/white"
@@ -89,7 +89,7 @@
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/button_action"
                 android:layout_width="90dp"
-                android:layout_height="90dp"
+                android:layout_height="94dp"
                 android:layout_marginTop="0dp"
                 android:paddingTop="7dp"
                 android:paddingLeft="15dp"
@@ -105,8 +105,8 @@
             <!-- Кнопка галереи -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/button_gallery"
-                android:layout_width="56dp"
-                android:layout_height="56dp"
+                android:layout_width="57dp"
+                android:layout_height="62dp"
                 app:cornerRadius="40dp"
                 android:paddingLeft="17dp"
                 android:backgroundTint="@color/white"

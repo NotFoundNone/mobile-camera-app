@@ -1,11 +1,46 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@color/gray_background"> <!-- Задаем общий серый фон -->
 
+    <!-- Верхняя панель -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:gravity="center_vertical"
+        android:background="@color/gray_panel"> <!-- Серый цвет панели -->
+
+        <!-- Кнопка "Назад" -->
+        <ImageButton
+            android:id="@+id/button_back"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/back"
+            app:tint="@color/gray_icon"/>
+
+        <!-- Текст "Галерея" -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:text="Галерея"
+            android:textAppearance="?attr/textAppearanceHeadline6"
+            android:fontFamily="sans-serif-medium"
+            android:textSize="25dp"
+            android:textStyle="bold"
+            android:textColor="@color/gray_text" /> <!-- Серый цвет текста -->
+    </LinearLayout>
+
+    <!-- RecyclerView для галереи -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_view_gallery"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_marginTop="56dp"
         android:padding="8dp"
         android:clipToPadding="false" />
 </FrameLayout>

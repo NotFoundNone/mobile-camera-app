@@ -38,6 +38,9 @@
         <action
         android:id="@+id/action_galleryFragment_to_fullScreenViewerFragment"
         app:destination="@id/fullScreenViewerFragment" />
+        <action
+            android:id="@+id/action_galleryFragment_to_photoFragment"
+            app:destination="@id/photoFragment" />
     </fragment>
 
     <fragment

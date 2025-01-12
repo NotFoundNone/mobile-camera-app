@@ -1,23 +1,18 @@
 package com.example.mobilecourcework
 
-import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Environment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageButton
 import android.widget.Toast
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.camera.video.*
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
-import com.arthenica.mobileffmpeg.Config
-import com.arthenica.mobileffmpeg.FFmpeg
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.button.MaterialButtonToggleGroup
 import java.io.File
@@ -48,16 +43,9 @@ class PhotoFragment : Fragment() {
         val buttonVideo = view.findViewById<MaterialButton>(R.id.button_video)
 
         // Устанавливаем начальное состояние
-        val currentFragmentId = findNavController().currentDestination?.id
-        if (currentFragmentId == R.id.photoFragment) {
-            toggleGroup.check(R.id.button_photo)
-            buttonPhoto.setTextColor(ContextCompat.getColor(requireContext(), R.color.orange))
-            buttonVideo.setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
-        } else if (currentFragmentId == R.id.videoFragment) {
-            toggleGroup.check(R.id.button_video)
-            buttonVideo.setTextColor(ContextCompat.getColor(requireContext(), R.color.orange))
-            buttonPhoto.setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
-        }
+        toggleGroup.check(R.id.button_photo)
+        buttonPhoto.setTextColor(ContextCompat.getColor(requireContext(), R.color.orange))
+        buttonVideo.setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
 
         // Обработчик переключения режимов
         toggleGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
@@ -66,16 +54,12 @@ class PhotoFragment : Fragment() {
                     R.id.button_photo -> {
                         buttonPhoto.setTextColor(ContextCompat.getColor(requireContext(), R.color.orange))
                         buttonVideo.setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
-                        if (currentFragmentId != R.id.photoFragment) {
-                            findNavController().navigate(R.id.action_videoFragment_to_photoFragment)
-                        }
+                        findNavController().navigate(R.id.action_videoFragment_to_photoFragment)
                     }
                     R.id.button_video -> {
                         buttonVideo.setTextColor(ContextCompat.getColor(requireContext(), R.color.orange))
                         buttonPhoto.setTextColor(ContextCompat.getColor(requireContext(), R.color.white))
-                        if (currentFragmentId != R.id.videoFragment) {
-                            findNavController().navigate(R.id.action_photoFragment_to_videoFragment)
-                        }
+                        findNavController().navigate(R.id.action_photoFragment_to_videoFragment)
                     }
                 }
             }
@@ -183,4 +167,3 @@ class PhotoFragment : Fragment() {
         )
     }
 }
-

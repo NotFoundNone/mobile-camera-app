@@ -6,4 +6,8 @@
     <color name="transparent">#00000000</color>
     <color name="orange">#FFA500</color>
     <color name="red">#FF0000</color>
+    <color name="gray_background">#FFFFFF</color> <!-- Белый фон -->
+    <color name="gray_panel">#F5F5F5</color>      <!-- Очень светло-серый (почти белый) для панели -->
+    <color name="gray_text">#333333</color>       <!-- Тёмно-серый текст для контраста -->
+    <color name="gray_icon">#333333</color>       <!-- Тёмно-серый для иконки -->
 </resources>
