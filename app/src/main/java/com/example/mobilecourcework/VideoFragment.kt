@@ -25,7 +25,14 @@ import java.util.concurrent.Executors
 
 class VideoFragment : Fragment() {
 
-    // ViewBinding для доступа к элементам интерфейса
+    companion object {
+        private const val REQUEST_CODE_PERMISSIONS = 1001
+        private val REQUIRED_PERMISSIONS = arrayOf(
+            android.Manifest.permission.CAMERA,
+            android.Manifest.permission.RECORD_AUDIO
+        )
+    }
+
     private var _binding: FragmentVideoBinding? = null
     private val binding get() = _binding!!
 
@@ -36,13 +43,8 @@ class VideoFragment : Fragment() {
     private lateinit var videoCapture: VideoCapture<Recorder>
     private var currentRecording: Recording? = null
 
-    // Выбор камеры (задняя по умолчанию)
     private var cameraSelector: CameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-
-    // Флаг, указывающий, идет ли запись
     private var isRecording = false
-
-    // Флаг, предотвращающий многократное переключение камеры
     private var isSwitchingCamera = false
 
     // Handler для управления таймером записи
@@ -50,7 +52,6 @@ class VideoFragment : Fragment() {
     private var startTime: Long = 0
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        // Инициализация ViewBinding
         _binding = FragmentVideoBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -62,22 +63,16 @@ class VideoFragment : Fragment() {
         cameraExecutor = Executors.newSingleThreadExecutor()
         timerHandler = Handler(Looper.getMainLooper())
 
-        // Устанавливаем кнопки переключения режимов
-        setupToggleButtons()
-
-        // Проверяем разрешения и запускаем камеру
         if (allPermissionsGranted()) {
             startCamera()
         } else {
             requestPermissions(REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
         }
 
-        // Обработчик для кнопки открытия галереи
         binding.buttonGallery.setOnClickListener {
             findNavController().navigate(R.id.action_videoFragment_to_galleryFragment)
         }
 
-        // Обработчик для переключения камеры
         binding.buttonSwitchCamera.setOnClickListener {
             if (!isRecording) {
                 switchCamera()
@@ -86,15 +81,10 @@ class VideoFragment : Fragment() {
             }
         }
 
+        // Устанавливаем кнопки для переключения камеры и видео
+        setupToggleButtons()
         // Устанавливаем обработчик для кнопки записи
         setupRecordVideoButton()
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        // Очищаем ViewBinding и останавливаем Executor
-        _binding = null
-        cameraExecutor.shutdown()
     }
 
     // Настройка переключения между режимами (фото/видео)
@@ -138,38 +128,6 @@ class VideoFragment : Fragment() {
         }
     }
 
-    // Запуск камеры
-    private fun startCamera() {
-        val cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
-        cameraProviderFuture.addListener({
-            val cameraProvider = cameraProviderFuture.get()
-
-            // Настраиваем предварительный просмотр
-            val preview = Preview.Builder().build().also {
-                it.setSurfaceProvider(binding.previewView.surfaceProvider)
-            }
-
-            // Настройка записи видео
-            val recorder = Recorder.Builder()
-                .setQualitySelector(QualitySelector.from(Quality.HIGHEST))
-                .build()
-
-            videoCapture = VideoCapture.withOutput(recorder)
-
-            // Отвязываем старые случаи использования и привязываем новые
-            cameraProvider.unbindAll()
-            try {
-                cameraProvider.bindToLifecycle(
-                    this, cameraSelector, preview, videoCapture
-                )
-            } catch (exc: Exception) {
-                // Обработка ошибок при запуске камеры
-                Toast.makeText(requireContext(), "Ошибка запуска камеры: ${exc.message}", Toast.LENGTH_SHORT).show()
-            }
-        }, ContextCompat.getMainExecutor(requireContext()))
-    }
-
-    // Настройка кнопки записи видео
     private fun setupRecordVideoButton() {
         binding.buttonRecordVideo.setOnClickListener {
             if (isRecording) {
@@ -182,6 +140,53 @@ class VideoFragment : Fragment() {
                 binding.buttonRecordVideo.setIconResource(R.drawable.stop_recording)
             }
         }
+    }
+
+    private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
+        ContextCompat.checkSelfPermission(requireContext(), it) == PackageManager.PERMISSION_GRANTED
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQUEST_CODE_PERMISSIONS) {
+            if (allPermissionsGranted()) {
+                startCamera()
+            } else {
+                Toast.makeText(requireContext(), "Необходимо разрешение для работы", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    // Запуск камеры
+    private fun startCamera() {
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
+        cameraProviderFuture.addListener({
+            val cameraProvider = cameraProviderFuture.get()
+
+            val preview = Preview.Builder().build().also {
+                it.setSurfaceProvider(binding.previewView.surfaceProvider)
+            }
+
+            // Настройка записи видео
+            val recorder = Recorder.Builder()
+                .setQualitySelector(QualitySelector.from(Quality.HIGHEST))
+                .build()
+
+            videoCapture = VideoCapture.withOutput(recorder)
+
+            cameraProvider.unbindAll()
+            try {
+                cameraProvider.bindToLifecycle(
+                    this, cameraSelector, preview, videoCapture
+                )
+            } catch (exc: Exception) {
+                Toast.makeText(requireContext(), "Ошибка запуска камеры: ${exc.message}", Toast.LENGTH_SHORT).show()
+            }
+        }, ContextCompat.getMainExecutor(requireContext()))
     }
 
     // Начало записи видео
@@ -206,16 +211,11 @@ class VideoFragment : Fragment() {
         // Отображение таймера записи
         binding.recordingTimerLayout.visibility = View.VISIBLE
         startTimer()
-        updateRecordButtonUI(true)
     }
 
     // Обработка событий записи видео
     private fun handleRecordingEvent(event: VideoRecordEvent, videoFile: File) {
         when (event) {
-            is VideoRecordEvent.Start -> {
-                // Запись началась
-                Toast.makeText(requireContext(), "Запись началась", Toast.LENGTH_SHORT).show()
-            }
             is VideoRecordEvent.Finalize -> {
                 // Запись завершена
                 isRecording = false
@@ -250,11 +250,6 @@ class VideoFragment : Fragment() {
     private fun stopRecording() {
         currentRecording?.stop()
         currentRecording = null
-        isRecording = false
-
-        stopTimer()
-        binding.recordingTimerLayout.visibility = View.GONE
-        updateRecordButtonUI(false)
     }
 
     // Переключение между камерами (передняя/задняя)
@@ -279,15 +274,6 @@ class VideoFragment : Fragment() {
         }
     }
 
-    // Обновление иконки кнопки записи
-    private fun updateRecordButtonUI(isRecording: Boolean) {
-        if (isRecording) {
-            binding.buttonRecordVideo.setIconResource(R.drawable.stop_recording)
-        } else {
-            binding.buttonRecordVideo.setIconResource(R.drawable.record_video)
-        }
-    }
-
     // Запуск таймера записи
     private fun startTimer() {
         startTime = System.currentTimeMillis()
@@ -307,32 +293,10 @@ class VideoFragment : Fragment() {
         timerHandler.removeCallbacksAndMessages(null)
     }
 
-    // Проверяем, предоставлены ли все необходимые разрешения
-    private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
-        ContextCompat.checkSelfPermission(requireContext(), it) == PackageManager.PERMISSION_GRANTED
-    }
-
-    // Обработка результата запроса разрешений
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_CODE_PERMISSIONS) {
-            if (allPermissionsGranted()) {
-                startCamera()
-            } else {
-                Toast.makeText(requireContext(), "Необходимо разрешение для работы", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
-    companion object {
-        private const val REQUEST_CODE_PERMISSIONS = 1001 // Код запроса разрешений
-        private val REQUIRED_PERMISSIONS = arrayOf(
-            android.Manifest.permission.CAMERA, // Разрешение на камеру
-            android.Manifest.permission.RECORD_AUDIO // Разрешение на запись звука
-        )
+    override fun onDestroyView() {
+        super.onDestroyView()
+        // Очищаем ViewBinding и останавливаем Executor
+        _binding = null
+        cameraExecutor.shutdown()
     }
 }

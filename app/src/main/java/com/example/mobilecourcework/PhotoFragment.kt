@@ -20,11 +20,21 @@ import java.util.concurrent.Executors
 
 // Фрагмент для работы с фото
 class PhotoFragment : Fragment() {
+
+    companion object {
+        private const val REQUEST_CODE_PERMISSIONS = 1001 // Код запроса разрешений
+        private val REQUIRED_PERMISSIONS = arrayOf(
+            android.Manifest.permission.CAMERA // Разрешение на использование камеры
+        )
+    }
+
     // View Binding для доступа к элементам интерфейса
     private var _binding: FragmentPhotoBinding? = null
     private val binding get() = _binding!!
 
     // Исполнительный сервис для фоновых операций камеры
+    // обеспечивает управлекния между двумя потоками (основным и потоком в котором будет работать камера)
+    // он будет осуществлять перемещение данных между потоками и их связь
     private lateinit var cameraExecutor: ExecutorService
 
     // Объект для захвата изображений
@@ -45,7 +55,7 @@ class PhotoFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Инициализация исполнительного сервиса для работы с камерой
+        // Инициализация исполнительного сервиса для работы с камерой (используется для обмена информацией между двумя потоками)
         cameraExecutor = Executors.newSingleThreadExecutor()
 
         // Установка начального состояния переключателя
@@ -98,23 +108,51 @@ class PhotoFragment : Fragment() {
         }
     }
 
+    // Обработка результата запроса разрешений
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQUEST_CODE_PERMISSIONS) {
+            if (allPermissionsGranted()) {
+                startCamera()
+            } else {
+                Toast.makeText(requireContext(), "Необходимо разрешение для работы", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    // Проверяем, предоставлены ли все необходимые разрешения
+    private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
+        ContextCompat.checkSelfPermission(requireContext(), it) == PackageManager.PERMISSION_GRANTED
+    }
+
     // Запуск камеры
     private fun startCamera() {
+
+        //Начнем все с связывания жизненных циклов
         val cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext())
         cameraProviderFuture.addListener({
+
+            //Получаем cameraProviderFuture для связи с основным жизненным циклом фрагмента
             val cameraProvider = cameraProviderFuture.get()
 
             // Настраиваем превью камеры
             val preview = Preview.Builder().build().also {
+                //связываем превью с view в разметке
                 it.setSurfaceProvider(binding.previewView.surfaceProvider)
             }
 
-            // Создаем объект для захвата изображений
+            // Создаем объект для захвата изображений, он отвечает за захват изображения для последующего сохранения в файл
             imageCapture = ImageCapture.Builder().build()
 
-            // Отвязываем все предыдущие случаи использования и привязываем новые
+            // Отвязываем все предыдущие случаи использования и привязываем новые,
+            // тем самы убеждаемся что ничего не связано с провайдером на текущий момент
             cameraProvider.unbindAll()
             try {
+                //привязываем все созданные нами объекты к жизненному циклу фрагмента
                 cameraProvider.bindToLifecycle(
                     this, cameraSelector, preview, imageCapture
                 )
@@ -169,38 +207,10 @@ class PhotoFragment : Fragment() {
         }
     }
 
-    // Проверяем, предоставлены ли все необходимые разрешения
-    private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
-        ContextCompat.checkSelfPermission(requireContext(), it) == PackageManager.PERMISSION_GRANTED
-    }
-
-    // Обработка результата запроса разрешений
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_CODE_PERMISSIONS) {
-            if (allPermissionsGranted()) {
-                startCamera()
-            } else {
-                Toast.makeText(requireContext(), "Необходимо разрешение для работы", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
     // Очищаем View Binding и завершаем работу executor'а
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
         cameraExecutor.shutdown()
-    }
-
-    companion object {
-        private const val REQUEST_CODE_PERMISSIONS = 1001 // Код запроса разрешений
-        private val REQUIRED_PERMISSIONS = arrayOf(
-            android.Manifest.permission.CAMERA // Разрешение на использование камеры
-        )
     }
 }
